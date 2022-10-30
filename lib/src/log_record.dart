@@ -6,6 +6,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:intl/intl.dart';
+
 import 'level.dart';
 import 'logger.dart';
 
@@ -71,7 +73,9 @@ class LogRecord {
 
   @override
   String toString() {
-    var localDuration = duration != null ? '(${duration?.inMilliseconds}ms)' : null;
+    final nf = NumberFormat('##0.000', 'en_US');
+
+    var localDuration = duration != null ? 'z(${nf.format(duration!.inMicroseconds / 1000).padLeft(10)}ms)' : null;
     var localObject = object != null ? const JsonEncoder.withIndent('  ').convert(object) : '';
 
     return [
