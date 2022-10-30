@@ -75,7 +75,7 @@ class LogRecord {
   String toString() {
     final nf = NumberFormat('##0.000', 'en_US');
 
-    var localDuration = duration != null ? 'z(${nf.format(duration!.inMicroseconds / 1000).padLeft(10)}ms)' : null;
+    var localDuration = duration != null ? '(${nf.format(duration!.inMicroseconds / 1000).padLeft(10)}ms)' : null;
     var localObject = object != null ? const JsonEncoder.withIndent('  ').convert(object) : '';
 
     return [
