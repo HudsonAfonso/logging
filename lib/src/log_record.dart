@@ -3,6 +3,8 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'level.dart';
 import 'logger.dart';
@@ -14,7 +16,7 @@ class LogRecord {
   final String message;
 
   /// Non-string message passed to Logger.
-  final Object? object;
+  final Map<String, dynamic>? object;
 
   /// Logger where this record is stored.
   final String loggerName;
@@ -36,11 +38,49 @@ class LogRecord {
   /// Zone of the calling code which resulted in this LogRecord.
   final Zone? zone;
 
-  LogRecord(this.level, this.message, this.loggerName,
-      [this.error, this.stackTrace, this.zone, this.object])
-      : time = DateTime.now(),
+  final Duration? duration;
+
+  final String host = Platform.localHostname;
+
+  String environment = const bool.fromEnvironment('dart.vm.product') ? 'production' : 'debug';
+
+  LogRecord(
+    this.level,
+    this.message,
+    this.loggerName, [
+    this.error,
+    this.stackTrace,
+    this.zone,
+    this.object,
+    this.duration,
+  ])  : time = DateTime.now(),
         sequenceNumber = LogRecord._nextNumber++;
 
+  Map<String, dynamic> toMap() => <String, dynamic>{
+        'time': time.toIso8601String(),
+        'level': level.name,
+        if (duration != null) 'duration_ms': duration?.inMilliseconds,
+        'message': message,
+        if (object != null) 'payload': object,
+        'host': host,
+        'environment': environment,
+        'name': loggerName,
+        if (error != null) 'error': error,
+        if (stackTrace != null) 'stack_trace': stackTrace,
+      };
+
   @override
-  String toString() => '[${level.name}] $loggerName: $message';
+  String toString() {
+    var localDuration = duration != null ? '(${duration?.inMilliseconds}ms)' : null;
+    var localObject = object != null ? const JsonEncoder.withIndent('  ').convert(object) : '';
+
+    return [
+      time.toIso8601String(),
+      level.name.substring(0, 1),
+      if (localDuration != null) localDuration,
+      loggerName,
+      '-- $message --',
+      localObject,
+    ].join(' ');
+  }
 }
